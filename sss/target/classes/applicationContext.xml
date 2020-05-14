@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/context
+                    http://www.springframework.org/schema/context/spring-context.xsd
+                    http://www.springframework.org/schema/beans
+                    http://www.springframework.org/schema/beans/spring-beans.xsd
+                    http://www.springframework.org/schema/data/jpa
+                    http://www.springframework.org/schema/data/jpa/spring-jpa.xsd
+                    http://www.springframework.org/schema/tx
+                    http://www.springframework.org/schema/tx/spring-tx.xsd ">
+
+
+    <!-- 加载配置文件 -->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    <!-- dataSource 配置 -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <!-- 基本属性 url、user、password -->
+        <property name="driverClassName" value="${jdbc.driver}"></property>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <!--数据源-->
+        <property name="dataSource" ref="dataSource"></property>
+        <!--扫描包路径-->
+        <property name="packagesToScan" value="com.lagou.edu.pojo"></property>
+
+        <!--JPA实现，hibernate-->
+        <property name="persistenceProvider">
+            <bean class="org.hibernate.jpa.HibernatePersistenceProvider"></bean>
+        </property>
+        <!--jpa方言配置-->
+        <property name="jpaDialect">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect"></bean>
+        </property>
+        <!--配置具体provider,hibernate具体实现细节-->
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+                <!--配置数据表是否自动创建-->
+                <property name="generateDdl" value="false"></property>
+
+                <!--指定数据库类型-->
+                <property name="database" value="MYSQL"></property>
+
+                <!--配置数据库方言-->
+                <property name="databasePlatform" value="org.hibernate.dialect.MySQLDialect"></property>
+
+                <!--是否显示sql-->
+                <property name="showSql" value="true"></property>
+            </bean>
+        </property>
+    </bean>
+
+    <jpa:repositories base-package="com.lagou.edu.dao" entity-manager-factory-ref="entityManagerFactory" transaction-manager-ref="transactionManager"></jpa:repositories>
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory"></property>
+
+    </bean>
+
+    <tx:annotation-driven/>
+
+    <!-- 自动扫描web包 ,将带有注解的类纳入spring容器管理 -->
+    <!--Spring 容器初始化的时候，会扫描 com.lagou.edu 下标有
+        (@Component,@Service,@Controller,@Repository) 注解的类,纳入spring容器管理-->
+    <context:component-scan base-package="com.lagou.edu.service"></context:component-scan>
+
+</beans>
